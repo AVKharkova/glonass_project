@@ -492,6 +492,36 @@ class VehicleDriverSchema(APIBaseModel):
     isDefault: Optional[bool] = Field(None, description="По умолчанию")
 
 
+class VehicleCMSV6ParametersSchema(APIBaseModel):
+    id: Optional[str] = Field(None, description="ID объекта (в CMSV6)")
+    enabled: Optional[bool] = Field(None, description="Включить")
+    host: Optional[str] = Field(None, description="CMSV6 Web Host")
+    login: Optional[str] = Field(None, description="CMSV6 Account")
+    password: Optional[str] = Field(None, description="CMSV6 Password")
+
+
+class VehicleCommandTemplateSchema(APIBaseModel):
+    id: Optional[str] = Field(None, description="ID команды")
+    name: Optional[str] = Field(None, description="Наименование команды")
+    command: Optional[str] = Field(None, description="Текст команды")
+    retries: Optional[int] = Field(None, description="Количество попыток")
+    
+
+class VehicleInspectionTaskSchema(APIBaseModel):
+    id: Optional[str] = Field(None, description="ID задания")
+    enabled: Optional[bool] = Field(None, description="Флаг активности задания")
+    name: Optional[str] = Field(None, description="Наименование задания")
+    description: Optional[str] = Field(None, description="Описание задания")
+    mileageCondition: Optional[float] = Field(None, description="Условие по пробегу (в метрах)")
+    lastMileage: Optional[float] = Field(None, description="Пробег на момент последнего ТО")
+    motohoursCondition: Optional[float] = Field(None, description="Условие по моточасам (в секундах)")
+    lastMotohours: Optional[float] = Field(None, description="Моточасы на момент последнего ТО")
+    periodicCondition: Optional[int] = Field(None, description="Условие периодичности по времени (значение)")
+    kind: Optional[str] = Field(None, description="Вид периодичности (Days, Months, Years)")
+    lastInspectionDate: Optional[str] = Field(None, description="Дата последнего ТО (ISO datetime)")
+    maxQuantity: Optional[int] = Field(None, description="Сколько раз выполнить задание")
+
+
 class VehicleStatusHistoryItemSchema(APIBaseModel):
     """
     Модель для элемента истории статусов объекта.
@@ -502,6 +532,7 @@ class VehicleStatusHistoryItemSchema(APIBaseModel):
     status: Optional[int] = Field(None, description="ID статуса")
     date: Optional[str] = Field(None, description="Дата статуса")
     description: Optional[str] = Field(None, description="Описание статуса (комментарий)")
+    additionalInfo: Optional[str] = Field(None, description="Дополнительная информация по статусу")
 
 
 class VehicleDetailResponseSchema(APIBaseModel):
@@ -548,14 +579,43 @@ class VehicleDetailResponseSchema(APIBaseModel):
     unitName: Optional[str] = Field(None, description="Наименование подразделения")
     status: Optional[int] = Field(None, description="Статус объекта (числовое представление)")
     createdAt: Optional[str] = Field(None, description="Дата создания объекта")
+    
+    showLineTrackWhenNoCoords: Optional[bool] = Field(None)
+    IsSackEnabled: Optional[bool] = Field(None, alias="isSackEnabled") # Учесть регистр из JSON
+
     customFields: Optional[List[VehicleCustomFieldSchema]] = Field(None, description="Произвольные поля")
+    
     consumptionPer100Km: Optional[Union[float, str]] = Field(None, description="Расход топлива на 100 км")
     consumptionPerHour: Optional[Union[float, str]] = Field(None, description="Расход топлива за моточас")
+    consumptionIdle: Optional[Union[float, str]] = Field(None, description="Расход топлива на холостом ходу") # Union, т.к. может быть строка
+    consumptionPer100KmSeasonal: Optional[float] = Field(None)
+    consumptionPerHourSeasonal: Optional[float] = Field(None)
+    consumptionIdleSeasonal: Optional[float] = Field(None)
+    consumptionPer100KmSeasonalBegin: Optional[str] = Field(None)
+    consumptionPer100KmSeasonalEnd: Optional[str] = Field(None)
+    consumptionPerHourSeasonalBegin: Optional[str] = Field(None)
+    consumptionPerHourSeasonalEnd: Optional[str] = Field(None)
+    consumptionIdleSeasonalBegin: Optional[str] = Field(None)
+    consumptionIdleSeasonalEnd: Optional[str] = Field(None)
+
+    mileageCalcMethod: Optional[Union[int,str]] = Field(None, description="0 - gps, 1 - датчик зажигания, или строка из API") # API может вернуть строку "ByGps"
+    mileageCoeff: Optional[float] = Field(None)
+    locationByCellId: Optional[bool] = Field(None, description="Определение местоположения по данным LBS")
+    dottedLineTrackWhenNoCoords: Optional[bool] = Field(None)
+    
     counters: Optional[VehicleCountersSchema] = Field(None, description="Счетчики (пробег, моточасы)")
+    
+    cmsv6Parameters: Optional[VehicleCMSV6ParametersSchema] = Field(None, description="Настройки видеомониторинга")
+    commandTemplates: Optional[List[VehicleCommandTemplateSchema]] = Field(None, description="Шаблоны команд")
+    
     sensors: Optional[List[VehicleSensorSchema]] = Field(None, description="Датчики")
     drivers: Optional[List[VehicleDriverSchema]] = Field(None, description="Водители")
+    
+    inspectionTasks: Optional[List[VehicleInspectionTaskSchema]] = Field(None, description="Задания на тех. обслуживание")
     statusHistory: Optional[List[VehicleStatusHistoryItemSchema]] = Field(None, description="История статусов")
-    locationByCellId: Optional[bool] = Field(None, description="Определение местоположения по данным LBS")
+    
+    highlightSensorGuid: Optional[str] = Field(None)
+    motohoursCalcMethod: Optional[Union[int, str]] = Field(None, description="0 - По датчику зажигания..., или строка из API") # API может вернуть строку "ByIgnitionSensor"
 
 
 # --- POST /api/v3/vehicles/find ---
